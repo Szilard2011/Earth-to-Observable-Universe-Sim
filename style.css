@@ -1,0 +1,518 @@
+/* Basic Reset & Setup */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Using new fonts */
+    font-family: 'Roboto', sans-serif;
+    color: #f0f0f0; /* Slightly off-white */
+    background-color: #000;
+    /* Add for smoother scrolling potentially */
+    overscroll-behavior-y: contain;
+}
+
+#simulator {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #000; /* Base background */
+    overflow: hidden;
+}
+
+/* --- Control Buttons --- */
+#mode-toggle, #debug-toggle {
+    position: fixed;
+    top: 10px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 0.8em;
+    font-family: 'Roboto', sans-serif;
+    backdrop-filter: blur(3px);
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+#mode-toggle {
+    right: 10px;
+    background-color: rgba(50, 50, 70, 0.5); /* Darker, slightly blue */
+    color: #aaccff; /* Light blue text */
+    border: 1px solid rgba(100, 120, 180, 0.6);
+}
+#mode-toggle:hover {
+    background-color: rgba(80, 80, 110, 0.7);
+    color: #d0e0ff;
+    border-color: rgba(140, 160, 220, 0.8);
+}
+
+#debug-toggle {
+    /* Adjust position based on mode toggle width if needed */
+    right: calc(10px + 150px); /* Position next to mode toggle */
+    background-color: rgba(70, 50, 50, 0.5); /* Reddish */
+    color: #ffaaaa;
+    border: 1px solid rgba(180, 100, 100, 0.6);
+}
+#debug-toggle:hover {
+    background-color: rgba(110, 80, 80, 0.7);
+    color: #ffd0d0;
+    border-color: rgba(220, 140, 140, 0.8);
+}
+
+
+/* Attribution */
+#attribution {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    font-size: 0.7em;
+    color: rgba(150, 150, 180, 0.4); /* Adjusted color */
+    z-index: 90;
+    pointer-events: none;
+}
+
+/* --- Background & Stars --- */
+#sky-bg-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    /* height dynamic */
+    z-index: 1;
+    /* transform applied via JS */
+    /* Ensure children are positioned relative to this */
+    transform-style: preserve-3d;
+    will-change: transform; /* Optimize scrolling */
+}
+
+.sky-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, #6a8aab 0%, #87CEEB 30%, #d0e0f0 80%, #304060 100%); /* Default start */
+    /* Opacity transition - ensure it applies */
+    transition: opacity 2.5s ease-in-out; /* Match JS timeout */
+    will-change: opacity; /* Hint for browser optimization */
+    backface-visibility: hidden; /* Prevent flickering during transform */
+}
+
+#sky-next {
+    opacity: 0; /* Starts hidden */
+}
+
+/* Separate container for stars parallax */
+#stars-parallax-container {
+     position: absolute;
+     top: 0; left: 0; width: 100%;
+     /* height dynamic, matches sky */
+     z-index: 3; /* Above sky, below ground */
+     overflow: hidden; /* Clip stars */
+     pointer-events: none;
+     /* transform applied via JS for parallax */
+     transform-style: preserve-3d;
+     will-change: transform;
+}
+
+/* Actual star holder, sized tall */
+#stars-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    height: 100%; /* Matches parent parallax container height */
+    pointer-events: none;
+    backface-visibility: hidden;
+}
+
+.star {
+    /* Ensure position is absolute for JS manipulation */
+    position: absolute;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 0 4px white, 0 0 8px rgba(255, 255, 255, 0.5); /* Softer glow */
+    /* Add twinkling animation */
+    animation: twinkle 4s ease-in-out infinite alternate;
+    /* Add will-change for potentially smoother repositioning */
+    will-change: top;
+}
+/* Vary animation delay for stars */
+.star:nth-child(5n) { animation-delay: 0.5s; }
+.star:nth-child(7n) { animation-delay: 1.2s; }
+.star:nth-child(11n) { animation-delay: 2.5s; }
+
+@keyframes twinkle {
+    0% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1.0; transform: scale(1.0); }
+    100% { opacity: 0.4; transform: scale(0.9); }
+}
+
+.galaxy {
+    position: absolute;
+    width: 12px; /* Slightly larger base */
+    height: 5px;
+    background: radial-gradient(ellipse at center, rgba(220,220,255,0.5) 0%,rgba(180,180,255,0.2) 50%,rgba(120,120,200,0) 100%);
+    border-radius: 50%;
+    filter: blur(1px); /* Soften galaxies */
+    opacity: 0; /* Start invisible, fade in */
+    animation: fadeInGalaxy 5s ease-in forwards; /* Fade in slowly */
+    will-change: opacity; /* Hint for animation */
+}
+/* Vary galaxy fade-in delay */
+.galaxy:nth-child(3n) { animation-delay: 1s; }
+.galaxy:nth-child(4n) { animation-delay: 2s; }
+
+@keyframes fadeInGalaxy {
+    to { opacity: 0.7; }
+}
+
+
+/* --- Ground Element --- */
+#ground {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    height: 10%; min-height: 40px;
+    background: linear-gradient(to top, #1a1008, #352010 40%, #503518 80%); /* Slightly more detail */
+    border-top: 3px solid #604530; /* Thicker horizon */
+    z-index: 5; /* Above sky/stars, below rocket/UI */
+    /* transform applied via JS for movement */
+    transition: opacity 0.5s linear; /* Fade out as it moves */
+    will-change: transform, opacity;
+}
+
+/* --- Rocket Styling --- */
+#rocket {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    /* ** INCREASED STARTING HEIGHT ** */
+    bottom: 10%; /* Start higher up */
+    width: 22px; height: 55px;
+    background: linear-gradient(to top, #a0a0a0, #e8e8e8, #b0b0b0); /* Less saturated metal */
+    border-top-left-radius: 50%; border-top-right-radius: 50%;
+    border-bottom: 3px solid #666; /* Darker base */
+    z-index: 10;
+    transition: bottom 0.1s ease-out;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3); /* Subtle glow */
+}
+
+/* Rocket Flame */
+.flame {
+    position: absolute;
+    bottom: -18px; /* Adjusted position */
+    left: 50%;
+    /* CSS variable controls scaleY */
+    transform: translateX(-50%) scaleY(var(--flame-scale, 0));
+    transform-origin: 50% 0%;
+    width: 15px; /* Wider base */
+    height: 30px; /* Longer base */
+    background: linear-gradient(to top, #ff4800, #ff8c00, #ffd700); /* Brighter flame */
+    border-bottom-left-radius: 50% 60%; /* More conical */
+    border-bottom-right-radius: 50% 60%;
+    opacity: 0;
+    filter: blur(2px); /* Softer flame edges */
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    will-change: transform, opacity; /* Optimization hint */
+}
+
+#rocket.thrusting .flame {
+    opacity: 1.0; /* Use filter for flicker brightness */
+    animation: flicker 0.08s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { filter: blur(2px) brightness(1.6) saturate(1.3); opacity: 1.0; }
+    100% { filter: blur(3px) brightness(1.0) saturate(1.0); opacity: 0.9; transform: translateX(-50%) scaleY(var(--flame-scale, 0)) scaleX(1.1); }
+}
+
+/* --- UI Elements --- */
+#ui {
+    position: fixed;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Default positioning handled by mode styles */
+}
+.info-panel {
+    background-color: rgba(20, 25, 40, 0.7); /* Darker blue panel */
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 0.85em;
+    border: 1px solid rgba(100, 120, 180, 0.5);
+    box-shadow: 0 2px 15px rgba(0, 100, 200, 0.2);
+    backdrop-filter: blur(5px); /* Frosted glass effect */
+}
+.info-panel p {
+    margin: 4px 0;
+    white-space: nowrap;
+    color: #c0d0e0; /* Lighter text color */
+}
+.info-panel p .label { /* Style for labels */
+    font-weight: 400;
+    color: #80a0c0; /* Dimmer label color */
+    display: inline-block;
+    width: 70px; /* Align values */
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(20, 25, 40, 0.7); /* Match panel */
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(100, 120, 180, 0.5);
+    box-shadow: 0 2px 15px rgba(0, 100, 200, 0.2);
+    backdrop-filter: blur(5px);
+}
+#thrust-label {
+    font-size: 1em;
+    margin-bottom: 10px;
+    color: #d0e0ff;
+    font-family: 'Orbitron', sans-serif; /* Sci-fi font for label */
+    text-align: center;
+    width: 100%;
+}
+#thrust-label #thrust-value {
+    font-weight: 700;
+}
+
+/* Thrust Slider Styling */
+#thrust-slider {
+    width: 100%;
+    height: 10px; /* Thinner track */
+    cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    /* Nicer gradient for track */
+    background: linear-gradient(to right, #405070 , #70a0ff 80%, #a0d0ff);
+    border-radius: 5px;
+    outline: none;
+    opacity: 0.8;
+    transition: opacity .2s;
+    margin-bottom: 5px;
+    border: 1px solid rgba(100, 120, 180, 0.3);
+}
+#thrust-slider:hover:not(:disabled) { opacity: 1; }
+/* Slider Thumb (Common Styling) */
+#thrust-slider::-webkit-slider-thumb {
+    appearance: none; -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #d0e0ff; /* Light blue thumb */
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #5070a0; /* Darker blue border */
+    box-shadow: 0 0 8px rgba(150, 200, 255, 0.6); /* Blue glow */
+    margin-top: -6px; /* Adjust vertical position based on track height */
+}
+#thrust-slider::-moz-range-thumb {
+    width: 18px; /* FF sizing */
+    height: 18px;
+    background: #d0e0ff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #5070a0;
+    box-shadow: 0 0 8px rgba(150, 200, 255, 0.6);
+}
+/* Disabled State */
+#thrust-slider:disabled { background: #444; opacity: 0.4; cursor: not-allowed; border-color: #666;}
+#thrust-slider:disabled::-webkit-slider-thumb { background: #888; box-shadow: none; border-color: #555; cursor: not-allowed; }
+#thrust-slider:disabled::-moz-range-thumb { background: #888; box-shadow: none; border-color: #555; cursor: not-allowed; }
+
+/* PC Controls Instructions Styling */
+#pc-instructions {
+    font-size: 0.8em;
+    color: #80a0c0; /* Dimmer color like labels */
+    margin-top: 8px;
+    text-align: center;
+    width: 100%;
+    transition: opacity 0.3s ease-out, height 0.3s ease-out, margin-top 0.3s ease-out;
+    overflow: hidden; /* Prevent content spill during transition */
+}
+
+#pc-instructions.hidden {
+    opacity: 0;
+    height: 0; /* Collapse space when hidden */
+    margin-top: 0;
+    pointer-events: none;
+}
+
+
+/* Debug Panel Styling */
+#debug-panel {
+    position: fixed;
+    top: 50px; /* Below buttons */
+    right: 10px;
+    width: 280px;
+    background-color: rgba(40, 20, 20, 0.85); /* Dark red tint */
+    border: 1px solid rgba(180, 100, 100, 0.6);
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 95; /* Below buttons, above attribution */
+    font-size: 0.8em;
+    backdrop-filter: blur(5px);
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transform: translateX(110%); /* Start off-screen */
+    opacity: 0;
+}
+#debug-panel:not(.hidden) {
+    transform: translateX(0); /* Slide in */
+    opacity: 1;
+}
+#debug-panel h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #ffcccc;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+}
+.debug-item {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping */
+}
+.debug-item label {
+    flex-basis: 90px; /* Fixed width for labels */
+    margin-right: 10px;
+    color: #ffaaaa;
+}
+.debug-item input[type="range"] {
+    flex-grow: 1; /* Take remaining space */
+    height: 6px;
+    cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background: linear-gradient(to right, #603030 , #ff8080);
+    border-radius: 3px; outline: none; opacity: 0.8;
+    border: 1px solid rgba(180, 100, 100, 0.4);
+}
+.debug-item input[type="range"]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; background: #ffcccc; border-radius: 50%; cursor: pointer; border: 1px solid #a06060; margin-top: -5px; }
+.debug-item input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: #ffcccc; border-radius: 50%; cursor: pointer; border: 1px solid #a06060; }
+
+/* Styles for Checkbox */
+.debug-item input[type="checkbox"] {
+    margin-left: 5px; /* Space after label */
+    cursor: pointer;
+    /* Optional: Style checkbox appearance */
+    accent-color: #ff8080; /* Match theme */
+    width: 16px; /* Explicit size */
+    height: 16px;
+}
+
+.debug-item span { /* Value display or info text */
+    margin-left: 10px;
+    font-weight: bold;
+    color: #fff;
+    min-width: 35px; /* Space for value */
+    text-align: right;
+    flex-grow: 1; /* Allow info text to take space */
+}
+/* Specific style for info text next to checkbox */
+.debug-item input[type="checkbox"] + span {
+    font-weight: normal;
+    font-style: italic;
+    color: #ffaaaa;
+    text-align: left;
+}
+
+
+#debug-reset {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    padding: 8px;
+    background-color: rgba(100, 60, 60, 0.7);
+    border: 1px solid #a06060;
+    color: #ffcccc;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#debug-reset:hover {
+    background-color: rgba(130, 80, 80, 0.8);
+}
+#debug-panel.hidden {
+    opacity: 0;
+    transform: translateX(110%);
+    pointer-events: none; /* Prevent interaction when hidden */
+}
+
+/* --- Layout Modes --- */
+/* Mobile Mode Specific Styles */
+.mobile-mode #ui {
+    /* ** LIFT UI SLIGHTLY OFF BOTTOM ** */
+    bottom: 300px;
+    left: 0;
+    width: 100%;
+    padding: 10px; /* Keep padding */
+}
+.mobile-mode .info-panel { margin-bottom: 15px; width: 95%; max-width: 400px; }
+.mobile-mode #controls { width: 95%; max-width: 400px; }
+.mobile-mode #rocket {
+    /* ** ENSURE MOBILE ROCKET STARTS HIGH ENOUGH ** */
+    bottom: 10%;
+}
+.mobile-mode #attribution { font-size: 0.65em; }
+.mobile-mode #pc-instructions { display: none; } /* Hide instructions in mobile */
+
+
+/* PC Mode Specific Styles */
+.pc-mode #ui { bottom: 300px; left: 20px; width: auto; align-items: flex-start; }
+.pc-mode .info-panel { margin-bottom: 10px; width: 300px; }
+.pc-mode #controls { width: 300px; align-items: stretch; }
+.pc-mode #rocket {
+    /* ** ENSURE PC ROCKET STARTS HIGH ENOUGH ** */
+    bottom: 10%;
+}
+.pc-mode #attribution { font-size: 0.7em; }
+.pc-mode #pc-instructions:not(.hidden) { /* Show instructions in PC mode if not explicitly hidden */
+    display: block; /* Or flex, inline-block etc. if needed */
+    width: 300px; /* Match controls width */
+    text-align: center;
+    opacity: 1;
+    height: auto; /* Let content define height */
+    margin-top: 8px;
+}
+
+
+/* Message Overlay */
+#message-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 30;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out 0.5s;
+    pointer-events: all;
+    cursor: pointer;
+    backdrop-filter: blur(4px); /* Blur background */
+}
+#message-overlay.hidden { opacity: 0; pointer-events: none; cursor: default; }
+#message-text {
+    color: #90c0ff; /* Softer blue */
+    font-size: 2em;
+    text-align: center;
+    padding: 20px;
+    text-shadow: 0 0 15px rgba(100, 150, 255, 0.7); /* Adjusted shadow */
+    font-family: 'Orbitron', sans-serif; /* Sci-fi font */
+    font-weight: 700;
+}
+
+/* --- Responsive Adjustments for Small Screens --- */
+@media (max-height: 500px) and (max-width: 450px) {
+    .mobile-mode .info-panel { font-size: 0.75em; padding: 8px 12px; }
+    .mobile-mode #controls { padding: 10px; }
+    .mobile-mode #thrust-label { font-size: 0.9em; margin-bottom: 8px;}
+    .mobile-mode #thrust-slider { height: 8px; }
+    .mobile-mode #thrust-slider::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -7px;}
+    .mobile-mode #thrust-slider::-moz-range-thumb { width: 16px; height: 16px; }
+    .mobile-mode #rocket { width: 18px; height: 45px; bottom: 20%; } /* Adjust small screen start */
+    .flame { height: 25px; width: 12px; bottom: -15px; }
+    #message-text { font-size: 1.6em; }
+    #attribution { display: none; } /* Hide attribution on very small screens */
+    #debug-toggle { right: calc(10px + 120px); font-size: 0.75em; padding: 5px 8px; } /* Adjust debug btn */
+    #mode-toggle { font-size: 0.75em; padding: 5px 8px; }
+    #debug-panel { width: 220px; font-size: 0.75em; top: 45px; } /* Shrink debug panel */
+    .debug-item label { flex-basis: 70px; }
+}

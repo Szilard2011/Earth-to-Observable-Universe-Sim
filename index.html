@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Earth to Universe - Light Speed Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="mobile-mode"> <!-- Start in mobile mode -->
+
+    <!-- Control Buttons -->
+    <button id="mode-toggle">Switch to PC Mode</button>
+    <button id="debug-toggle">Debug</button>
+
+    <!-- Attribution -->
+    <div id="attribution">Made by Pálnagy Szilárd</div>
+
+    <!-- Main Simulator Container -->
+    <div id="simulator">
+        <!-- Sky layers for fading -->
+        <div id="sky-bg-container">
+             <div id="sky-current" class="sky-layer"></div>
+             <div id="sky-next" class="sky-layer"></div>
+        </div>
+        <!-- Separate container for stars for parallax -->
+        <div id="stars-parallax-container">
+            <div id="stars-container"></div> <!-- Stars are populated here -->
+        </div>
+
+        <!-- Ground Element -->
+        <div id="ground"></div>
+
+        <!-- Rocket Element -->
+        <div id="rocket">
+            <div class="flame"></div>
+        </div>
+
+        <!-- User Interface Panel -->
+        <div id="ui">
+            <div class="info-panel">
+                <p><span class="label">Time:</span> <span id="timer">0.0s</span></p>
+                <p><span class="label">Altitude:</span> <span id="distance">0 m</span></p>
+                <p><span class="label">Velocity:</span> <span id="velocity">0 m/s</span></p>
+                <p><span class="label">Layer:</span> <span id="layer-name">Surface</span></p>
+            </div>
+            <div id="controls">
+                <label id="thrust-label" for="thrust-slider">Thrust: <span id="thrust-value">0%</span></label>
+                <input type="range" id="thrust-slider" min="0" max="1" step="0.01" value="0" disabled> <!-- Initially disabled -->
+            </div>
+            <!-- PC Controls Instructions -->
+            <div id="pc-instructions" class="hidden"> <!-- Initially hidden -->
+                Use [W]/[↑] & [S]/[↓] for Thrust
+            </div>
+        </div>
+
+        <!-- Debug Panel (Initially Hidden) -->
+        <div id="debug-panel" class="hidden">
+            <h4>Debug Settings</h4>
+            <div class="debug-item">
+                <label for="debug-thrust">Max Thrust:</label>
+                <input type="range" id="debug-thrust" min="10" max="200" step="5" value="45">
+                <span id="debug-thrust-value">45</span> m/s²
+            </div>
+            <div class="debug-item">
+                <label for="debug-gravity">Surf. Gravity:</label>
+                <input type="range" id="debug-gravity" min="1" max="25" step="0.5" value="9.81">
+                <span id="debug-gravity-value">9.81</span> m/s²
+            </div>
+             <div class="debug-item">
+                <label for="debug-drag">Sea Lvl Drag:</label>
+                <input type="range" id="debug-drag" min="0" max="0.002" step="0.0001" value="0.0005">
+                <span id="debug-drag-value">0.0005</span>
+            </div>
+             <div class="debug-item">
+                <label for="debug-star-speed">Star Parallax:</label>
+                <input type="range" id="debug-star-speed" min="1.0" max="1.5" step="0.05" value="1.1">
+                <span id="debug-star-speed-value">1.1</span> x Sky Speed
+            </div>
+            <!-- Light Speed Mode Toggle -->
+            <div class="debug-item">
+                <label for="debug-lightspeed">Light Speed Mode:</label>
+                <input type="checkbox" id="debug-lightspeed">
+                <span>(Thrust ramps up)</span>
+            </div>
+            <button id="debug-reset">Reset Defaults</button>
+        </div>
+
+        <!-- Message Overlay for Countdown/Win -->
+         <div id="message-overlay">
+            <p id="message-text">Tap Screen or Press [Space] to Initiate Launch Sequence</p> <!-- Added Spacebar hint -->
+        </div>
+    </div>
+
+    <!-- Link to JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
