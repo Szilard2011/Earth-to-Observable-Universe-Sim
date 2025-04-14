@@ -457,7 +457,7 @@ html, body {
 
 
 /* PC Mode Specific Styles */
-.pc-mode #ui { bottom: 200px; left: 20px; width: auto; align-items: flex-start; }
+.pc-mode #ui { bottom: 100px; left: 20px; width: auto; align-items: flex-start; }
 .pc-mode .info-panel { margin-bottom: 10px; width: 300px; }
 .pc-mode #controls { width: 300px; align-items: stretch; }
 .pc-mode #rocket {
